@@ -12,6 +12,12 @@ connection = sqlite3.connect("projectTwit.db")
 cursor = connection.cursor()
 cursor2 = connection.cursor()
 cursor3 = connection.cursor()
+
+
+# Transferring Data From SQL database to non Relational Database 
+
+
+
 #
 # Tables are
 # User---Tweet---Tweet_details---Tags---User_tags---Tweet_tags
