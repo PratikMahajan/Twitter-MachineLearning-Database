@@ -1,5 +1,29 @@
 import sqlite3
 import operator
+from  textblob import TextBlob
+import re
+import nltk, string
+from sklearn.feature_extraction.text import TfidfVectorizer
+import apikeys
+import oauth2
+import json
+
+# twitter application credentials
+consumer_key = apikeys.consumer_key
+consumer_secret = apikeys.consumer_secret
+access_token_key = apikeys.access_token_key
+access_token_secret = apikeys.access_token_secret
+# credentials end
+
+# Aunthitication to twitter account/server
+def twit_req(url, type, post_body, http_headers):
+    http_method = type
+    cOnsumer = oauth2.Consumer(key=consumer_key, secret=consumer_secret)
+    tOken = oauth2.Token(key=access_token_key, secret=access_token_secret)
+    cLient = oauth2.Client(cOnsumer, tOken)
+    resp, content = cLient.request(url, method=http_method, body=post_body, headers=http_headers)
+    return content
+
 
 
 # connceting to sqlite3 database to add data to tables
@@ -22,8 +46,7 @@ def tagsAssoPerson():
 
 
 def similarUsers():
-    print "Similar Users:"
-    userHandle= raw_input("Enter Twitter Handle to find similar users: ")
+    userHandle= raw_input("Enter Twitter Handle to find: ")
 
     query= "SELECT tag_id from user_tags where user_id='"+userHandle+"'"
     referenceSet= set()
@@ -161,6 +184,117 @@ def urlOrNot():
         print ("Limit URLs as far as possible")
     else:
         print ("You should use more URLs in Tweets")
+# ------------------------------------------------------------------------
+
+def clean_tweet(tweet):
+    # Utility function to clean tweet text by removing links, special characters
+    # using simple regex statements.
+    #
+    return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])| (\w+:\ / \ / \S+)", " ", tweet).split())
+
+
+
+def peopleSaying():
+    userAcc = raw_input("Enter Your User Handle: ")
+    query="select tweet_content, retweets from tweet as t inner join tweet_details as td where t.tweet_id=td.tweet_id order by td.retweets desc;"
+    resS= set()
+
+    for row in cursor.execute(query):
+        if userAcc in row[0].lower():
+            resS.add(row[0])
+
+    print ("\nPopular Mentions :\n")
+    i=0
+    senti=0
+    for x in resS:
+        if i < 3:
+            print "--->"+x
+        analysis =TextBlob(clean_tweet(x))
+        senti+= analysis.sentiment.polarity
+        i+=1
+    print("\n\n")
+    if  senti  > 0:
+        print 'Net Sentiment about '+ userAcc+' is Positive'
+    elif senti  == 0:
+        print 'Net Sentiment '+ userAcc+' is Neutral'
+    else:
+        print 'Net Sentiment '+ userAcc+' is Negative'
+# -----------------------------------------------------------------------------
+
+stemmer = nltk.stem.porter.PorterStemmer()
+remove_punctuation_map = dict((ord(char), None) for char in string.punctuation)
+
+def stem_tokens(tokens):
+    return [stemmer.stem(item) for item in tokens]
+
+# remove punctuation, lowercase, stem
+def normalize(text):
+    return stem_tokens(nltk.word_tokenize(text.lower().translate(remove_punctuation_map)))
+
+vectorizer = TfidfVectorizer(tokenizer=normalize, stop_words='english')
+
+def cosine_sim(text1, text2):
+    tfidf = vectorizer.fit_transform([text1, text2])
+    return ((tfidf * tfidf.T).A)[0,1]
+
+
+def postLikeMine():
+    referenceTweet = raw_input("Enter Your Tweet to Compare: ")
+    query = "select tweet_content, user_id from tweet as t inner join tweet_details as td where t.tweet_id=td.tweet_id order by td.retweets desc;"
+    resS = set()
+
+    for row in cursor.execute(query):
+        simRating = cosine_sim(clean_tweet(referenceTweet), clean_tweet(row[0]))
+        if simRating>0.25:
+            resS.add(row)
+            # print simRating
+
+    if len(resS)==0:
+        print "No Similar Tweets found"
+
+    for row in resS:
+        print (row[1]+"-||-"+row[0])
+    # print cosine_sim('a little bird', 'i dont know why there is a little bird')
+
+# ------------------------------------------------------------------------------------
+
+def getRetweeters(idss, mine):
+    url= "https://api.twitter.com/1.1/statuses/retweeters/ids.json?id="+idss+"&count=100&stringify_ids=true"
+    getJson = twit_req(url, "GET", "", "NONE")
+    parsedJson = json.loads(getJson)
+    relUsers=0
+    count=0
+    userSet= set()
+    for x in parsedJson['ids']:
+        urluser="https://api.twitter.com/1.1/followers/ids.json?cursor=-1&user_id="+x+"&count=5000"
+        getDetails=twit_req(urluser, "GET", "", "NONE")
+        pJson = json.loads(getDetails)
+        # print pJson
+        for user in pJson['ids']:
+            userSet.add(user)
+        if count==5:
+            break
+        count+=1
+
+
+    print "Potential reach is "+str(len(userSet)+int(mine))
+
+
+def whatsMyReach():
+    tweetId=raw_input("Enter the Tweet id to compare: ")
+    query= "select * from tweet_details where tweet_id="+tweetId
+    query2= "select * from (select t.user_id, u.followers from tweet as t inner join user as u where tweet_id="+tweetId+")"
+    td = cursor2.execute(query)
+    tweet=  td.fetchone()
+    tt=cursor.execute(query2)
+    totFollowers = tt.fetchone()[1]
+
+    if tweet[3]>0:
+        getRetweeters(tweet[0], totFollowers)
+
+
+
+
 
 
 while(i!=15):
@@ -173,6 +307,10 @@ while(i!=15):
     print "6. Tags to Include in Tweet"
     print "7. Best time to Tweet"
     print "8. Should you add URLs to Tweets?"
+    print "9. Who should I be following"
+    print "10. What are People saying about User"
+    print "11. Find a similar tweet"
+    print "12. Find Reach of Tweet"
     print "15. Exit"
 
     try:
@@ -196,6 +334,30 @@ while(i!=15):
         bestTimeToTweet()
     if(option==8):
         urlOrNot()
+    if (option == 9):
+        similarUsers()
+    if (option == 10):
+        peopleSaying()
+    if(option==11):
+        postLikeMine()
+    if(option==12):
+        whatsMyReach()
     if(option==15):
         i=15
         print "Exiting Program"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
