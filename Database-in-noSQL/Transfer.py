@@ -90,7 +90,7 @@ def getandPopulateTweets():
             getTag = "select tag_details from tags where tag_id='" + row2[0] + "'"
             tagName = cursor3.execute(getTag)
             list.append(tagName.fetchone()[0])
-        res= ('{ "tweet_id": "%s", "user_id": "%s", "tweet_contents": "%s", "urls": "%s", "date": "%s", "time": "%s", "favourites": %d, "retweets": %d, "hashtags": %s }'  %(row[0], row[1], row[2].replace("\n"," ").replace("\"",""), row[3], row[5], row[6], row[7], row[8], str(list).replace("'","\"").replace("u","").replace("\\","")   ))
+        res= ('{ "tweet_id": "%s", "user_id": "%s", "tweet_contents": "%s", "urls": "%s", "date": "%s", "time": "%s", "favourites": %d, "retweets": %d, "hashtags": %s }'  %(row[0], row[1], row[2].replace("\n"," ").replace("\"",""), row[3], row[5], row[6], row[7], row[8], str(list).replace("'","\"").replace("u\"","\"").replace("\\","")   ))
         print (res)
         db.tweet.insert_one(json.loads(res))
 

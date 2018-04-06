@@ -33,6 +33,12 @@ cursor2= connection.cursor()
 
 i=0
 
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+
 def tagsAssoPerson():
     person= raw_input("Enter twitter handle: ")
 
@@ -44,6 +50,7 @@ def tagsAssoPerson():
         tagName=cursor2.execute(getTag)
         print tagName.fetchone()[0]
 
+# ------------------------------------------------------------------------
 
 def similarUsers():
     userHandle= raw_input("Enter Twitter Handle to find: ")
@@ -83,7 +90,7 @@ def similarUsers():
     if(len(Result)==0):
         print "None Found"
 
-
+# ------------------------------------------------------------------------
 
 
 def popularThings():
@@ -95,6 +102,7 @@ def popularThings():
         tagName = cursor2.execute(getTag)
         print tagName.fetchone()[0]
 
+# ------------------------------------------------------------------------
 
 def trendingThings():
     print "Trending Things"
@@ -108,6 +116,7 @@ def trendingThings():
         tagName = cursor2.execute(getTag)
         print tagName.fetchone()[0]
 
+# ------------------------------------------------------------------------
 
 def shouldIFollow():
     print "Enter your UserName:"
@@ -139,7 +148,7 @@ def shouldIFollow():
     except ZeroDivisionError:
         print "Users does not Match, Do not Follow"
 
-
+# ------------------------------------------------------------------------
 
 def tagsToInclude():
     query="select tag_id, sum(retweets) as crt from tweet_details as td inner join tweet_tags as tt where td.tweet_id=tt.tweet_id group by tag_id order by crt desc limit 15;"
@@ -152,6 +161,8 @@ def tagsToInclude():
         tagName = cursor2.execute(getTag)
         print tagName.fetchone()[0]
 
+
+# ------------------------------------------------------------------------
 
 def bestTimeToTweet():
     query="select time,retweets from tweet_details group by time order by retweets desc;"
@@ -167,6 +178,7 @@ def bestTimeToTweet():
 
     print "The best time to tweet is "+str(sortDict[0][0])+":00 to "+str(sortDict[0][0]+1)+":00 hrs"
 
+# ------------------------------------------------------------------------
 
 
 def urlOrNot():
@@ -292,9 +304,34 @@ def whatsMyReach():
     if tweet[3]>0:
         getRetweeters(tweet[0], totFollowers)
 
+# -------------------------------------------------------------------
 
+def whatsMyInfluence():
+    usrnm = raw_input("Enter the UserName: ")
+    query1="select following, followers from user where user_id='"+usrnm+"'"
+    ud = cursor2.execute(query1)
+    ratiod = ud.fetchone()
+    ratio =float(float(ratiod[1])/float(ratiod[0]))
 
+    query2= "select count(*) , avg(retweets), avg(favourate) from (select retweets, favourate, user_id from tweet_details as td inner join tweet as t where td.tweet_id=t.tweet_id) where user_id='"+usrnm+"'"
+    td = cursor2.execute(query2)
+    rtfavd = td.fetchone()
 
+    print ratio, rtfavd[0],rtfavd[1],rtfavd[2]
+    infPerTweet = ratio*(float((rtfavd[1]+rtfavd[2])/2))
+
+    if infPerTweet<8:
+        print "Low Influence"
+    if 8<infPerTweet<15:
+        print "Moderate Influence"
+    if infPerTweet>15:
+        print "Highly Influencial "
+
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
 
 
 while(i!=15):
@@ -311,6 +348,7 @@ while(i!=15):
     print "10. What are People saying about User"
     print "11. Find a similar tweet"
     print "12. Find Reach of Tweet"
+    print "13. What is the influence of my post?"
     print "15. Exit"
 
     try:
@@ -342,14 +380,16 @@ while(i!=15):
         postLikeMine()
     if(option==12):
         whatsMyReach()
+    if (option == 13):
+        whatsMyInfluence()
     if(option==15):
         i=15
         print "Exiting Program"
 
 
 
-
-
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------# ------------------------------------------------------------------------
 
 
 
