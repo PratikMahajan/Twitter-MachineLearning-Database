@@ -196,6 +196,7 @@ def urlOrNot():
         print ("Limit URLs as far as possible")
     else:
         print ("You should use more URLs in Tweets")
+
 # ------------------------------------------------------------------------
 
 def clean_tweet(tweet):
@@ -231,6 +232,7 @@ def peopleSaying():
         print 'Net Sentiment '+ userAcc+' is Neutral'
     else:
         print 'Net Sentiment '+ userAcc+' is Negative'
+
 # -----------------------------------------------------------------------------
 
 stemmer = nltk.stem.porter.PorterStemmer()
@@ -317,7 +319,7 @@ def whatsMyInfluence():
     td = cursor2.execute(query2)
     rtfavd = td.fetchone()
 
-    print ratio, rtfavd[0],rtfavd[1],rtfavd[2]
+    # print ratio, rtfavd[0],rtfavd[1],rtfavd[2]
     infPerTweet = ratio*(float((rtfavd[1]+rtfavd[2])/2))
 
     if infPerTweet<8:
@@ -326,6 +328,24 @@ def whatsMyInfluence():
         print "Moderate Influence"
     if infPerTweet>15:
         print "Highly Influencial "
+
+# ------------------------------------------------------------------------
+
+def viralUserTweets():
+    usrnm = raw_input("Enter the UserName: ")
+    query2 = "select count(*) , avg(retweets), avg(favourate) from (select retweets, favourate, user_id from tweet_details as td inner join tweet as t where td.tweet_id=t.tweet_id) where user_id='" + usrnm + "'"
+    td = cursor2.execute(query2)
+    rtfavd = td.fetchone()
+
+    avgdetails=float((rtfavd[1]+rtfavd[2])/2)
+
+    if avgdetails<15:
+        print "User is not Viral"
+    if 20<avgdetails<100:
+        print "User is Moderately Viral"
+    if avgdetails>100:
+        print "User is Highly Viral "
+
 
 # ------------------------------------------------------------------------# ------------------------------------------------------------------------
 # ------------------------------------------------------------------------# ------------------------------------------------------------------------
@@ -349,6 +369,7 @@ while(i!=15):
     print "11. Find a similar tweet"
     print "12. Find Reach of Tweet"
     print "13. What is the influence of my post?"
+    print "14. How viral are my posts?"
     print "15. Exit"
 
     try:
@@ -382,6 +403,8 @@ while(i!=15):
         whatsMyReach()
     if (option == 13):
         whatsMyInfluence()
+    if (option == 14):
+        viralUserTweets()
     if(option==15):
         i=15
         print "Exiting Program"
