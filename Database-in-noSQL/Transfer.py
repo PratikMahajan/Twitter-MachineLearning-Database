@@ -5,7 +5,7 @@ import json
 
 #connecting to mongodb
 client = MongoClient('localhost', 27017)
-db=client.assignment3
+db=client.proj
 
 # connceting to sqlite3 database to add data to tables
 connection = sqlite3.connect("projectTwit.db")
@@ -70,11 +70,15 @@ def getAndPopulateUsers():
         output= "SELECT tag_id from user_tags where user_id='"+ row[0]+"' "
         list = []
         for row2 in cursor2.execute(output):
-            getTag="select tag_details from tags where tag_id='"+row2[0]+"'"
-            tagName=cursor3.execute(getTag)
-            list.append(tagName.fetchone()[0])
-        res= ('{ "user_id": "%s" , "user_name": "%s", "followers": %d, "following": %d, "tweet_count": %d, "hashtags": %s  }' %(row[0],row[1],row[2],row[3],row[4], str(list).replace("'","\"").replace("u","").replace("\\","")   ) )
+            try:
+                getTag="select tag_details from tags where tag_id='"+row2[0]+"'"
+                tagName=cursor3.execute(getTag)
+                list.append(tagName.fetchone()[0])
+            except Exception as e:
+                print "none"
+        res= ('{ "user_id": "%s" , "user_name": "%s", "followers": %d, "following": %d, "tweet_count": %d, "hashtags": %s  }' %(row[0],row[1],row[2],row[3],row[4], str(list).replace("'","\"").replace("u","").replace("\\","") ) )
         print (res)
+        break
         db.user.insert_one(json.loads(res))
 
 
@@ -87,14 +91,17 @@ def getandPopulateTweets():
         output = "SELECT tag_id from tweet_tags where tweet_id='" + row[0] + "' "
         list = []
         for row2 in cursor2.execute(output):
-            getTag = "select tag_details from tags where tag_id='" + row2[0] + "'"
-            tagName = cursor3.execute(getTag)
-            list.append(tagName.fetchone()[0])
+            try:
+                getTag = "select tag_details from tags where tag_id='" + row2[0] + "'"
+                tagName = cursor3.execute(getTag)
+                list.append(tagName.fetchone()[0])
+            except Exception as e:
+                print "none"
         res= ('{ "tweet_id": "%s", "user_id": "%s", "tweet_contents": "%s", "urls": "%s", "date": "%s", "time": "%s", "favourites": %d, "retweets": %d, "hashtags": %s }'  %(row[0], row[1], row[2].replace("\n"," ").replace("\"",""), row[3], row[5], row[6], row[7], row[8], str(list).replace("'","\"").replace("u\"","\"").replace("\\","")   ))
         print (res)
         db.tweet.insert_one(json.loads(res))
 
 
-getandPopulateTweets()
+# getandPopulateTweets()
 print("\n\n\n")
-# getAndPopulateUsers()
+getAndPopulateUsers()

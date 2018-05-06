@@ -1,3 +1,6 @@
 /apikeys.py
 /apikeys.pyc
 /venv
+venv
+*.pyc
+.ipynb_checkpoints

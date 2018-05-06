@@ -24,7 +24,7 @@ hashtagsTwitter = Set(['datascience', 'ArtificialIntelligence', 'Machinelearning
 # connceting to sqlite3 database to add data to tables
 connection = sqlite3.connect("projectTwit.db")
 cursor = connection.cursor()
-
+cur2=connection.cursor()
 
 # from twitter api imported above
 # refer https://github.com/sixohsix/twitter
@@ -112,6 +112,7 @@ def Search_tweets(list,count):
             addTweetTags(parsedJson["statuses"][i])
 
     removeTagDuplicates()
+    removeSynonymsAndMispellings()
     connection.commit()
     connection.close()
 
@@ -258,6 +259,18 @@ def removeTagDuplicates():
     cursor.execute(" delete from tweet_tags where tag_no NOT IN (select min(tag_no) from tweet_tags group by tweet_id,tag_id) ")
     connection.commit()
 
+
+def removeSynonymsAndMispellings():
+    res= cursor.execute(" SELECT orig_tag_id,syn_tag_id FROM synonym ")
+    for row in res:
+        cur2.execute('UPDATE user_tags Set tag_id=? where tag_id=?',(row[0], row[1], ))
+        cur2.execute('UPDATE tweet_tags Set tag_id=? where tag_id=?', (row[0], row[1],))
+    connection.commit()
+    res = cursor.execute(" SELECT orig_tag_id,misp_tag_id FROM mispelling ")
+    for row in res:
+        cur2.execute('UPDATE user_tags SET tag_id=? WHERE tag_id=?', (row[0], row[1],))
+        cur2.execute('UPDATE tweet_tags SET tag_id=? WHERE tag_id=?', (row[0], row[1],))
+    connection.commit()
 
 
 # function to clean date to proper format instead of twitter default format

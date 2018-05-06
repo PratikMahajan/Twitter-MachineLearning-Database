@@ -100,7 +100,8 @@ def popularThings():
     for row in cursor.execute(query):
         getTag = "select tag_details from tags where tag_id='" + row[0] + "'"
         tagName = cursor2.execute(getTag)
-        print tagName.fetchone()[0]
+        for row in tagName:
+            print row[0]
 
 # ------------------------------------------------------------------------
 
@@ -114,7 +115,8 @@ def trendingThings():
     for row in cursor.execute(query):
         getTag = "select tag_details from tags where tag_id='" + row[0] + "'"
         tagName = cursor2.execute(getTag)
-        print tagName.fetchone()[0]
+        for row in tagName:
+            print row[0]
 
 # ------------------------------------------------------------------------
 
@@ -159,7 +161,8 @@ def tagsToInclude():
     for row in cursor.execute(query):
         getTag = "select tag_details from tags where tag_id='" + row[0] + "'"
         tagName = cursor2.execute(getTag)
-        print tagName.fetchone()[0]
+        for row in tagName:
+            print row[0]
 
 
 # ------------------------------------------------------------------------
@@ -341,7 +344,7 @@ def viralUserTweets():
 
     if avgdetails<15:
         print "User is not Viral"
-    if 20<avgdetails<100:
+    if 15<avgdetails<100:
         print "User is Moderately Viral"
     if avgdetails>100:
         print "User is Highly Viral "

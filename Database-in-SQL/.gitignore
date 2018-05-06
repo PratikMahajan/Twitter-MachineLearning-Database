@@ -1,3 +1,7 @@
 /apikeys.py
 /apikeys.pyc
 /venv
+.DS_Store
+venv
+.ipynb_checkpoints
+*.pyc
